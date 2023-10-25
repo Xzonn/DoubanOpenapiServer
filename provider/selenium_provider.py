@@ -134,7 +134,7 @@ class SeleniumProvider(object):
         element_input.send_keys(keyword)
         element_submit:WebElement = driver.find_element_by_css_selector(css_selector=".bn input")
         element_submit.submit()
-        element_result_list:List = driver.find_elements_by_css_selector(css_selector="div.search-result div:nth-child(3) .result")
+        element_result_list:List = driver.find_elements_by_css_selector(css_selector="div.search-result div.result-list div.result")
         result = filter(self._filter_func_movie_only, element_result_list)
         result = map(self._map_func_get_href, result)
         result = map(lambda x: self._delegator_try_except_driver(self._func_info_fetch, x), list(result)[:limits])
@@ -160,7 +160,7 @@ class SeleniumProvider(object):
         except TimeoutException:
             print(f"the page opening is timeout: https://www.douban.com/search?q={keyword}")
             pass
-        element_result_list:List = driver.find_elements_by_css_selector(css_selector="div.search-result div:nth-child(3) .result")
+        element_result_list:List = driver.find_elements_by_css_selector(css_selector="div.search-result div.result-list div.result")
         result = filter(self._filter_func_movie_only, element_result_list)
 
         def func_item_wrap(element: WebElement) -> Dict:

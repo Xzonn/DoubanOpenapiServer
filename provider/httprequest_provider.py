@@ -16,7 +16,7 @@ class HttpRequestProvider(object):
         r = requests.get(f"https://www.douban.com/search?cat=1002&q={keyword}", headers=self.headers)
         r.raise_for_status()
         soup = BeautifulSoup(r.text, "html.parser")
-        elements = soup.select("div.search-result div:nth-child(3) .result")
+        elements = soup.select("div.search-result div.result-list div.result")
         elements = filter(lambda x: self._filter_func_movie_only(x), elements)
 
         def func_item_wrap(element) -> Dict:
@@ -48,7 +48,7 @@ class HttpRequestProvider(object):
         r = requests.get(f"https://www.douban.com/search?cat=1002&q={keyword}", headers=self.headers)
         r.raise_for_status()
         soup = BeautifulSoup(r.text, "html.parser")
-        elements = soup.select("div.search-result div:nth-child(3) .result")
+        elements = soup.select("div.search-result div.result-list div.result")
         elements = filter(lambda x: self._filter_func_movie_only(x), elements)
 
         def func_item_wrap(element) -> Dict:
