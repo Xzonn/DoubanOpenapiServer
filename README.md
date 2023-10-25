@@ -1,4 +1,4 @@
-![](https://travis-ci.org/caryyu/douban-openapi-server.svg?branch=main) ![](https://img.shields.io/docker/pulls/caryyu/douban-openapi-server.svg) 
+<!--![](https://travis-ci.org/caryyu/douban-openapi-server.svg?branch=main) ![](https://img.shields.io/docker/pulls/caryyu/douban-openapi-server.svg)-->
 
 # douban-openapi-server
 
@@ -13,11 +13,8 @@ A Douban API server that provides an unofficial method for information gathering
 ## Docker 
 
 ```shell
-docker run --rm -d -p 5000:5000 caryyu/douban-openapi-server:latest
-docker run --rm -d -p 5000:5000 caryyu/douban-openapi-server:<commit>
+docker compose up -d
 ```
-
-> Note: the `commit` can be found from git history of main branch
 
 ## Install
 

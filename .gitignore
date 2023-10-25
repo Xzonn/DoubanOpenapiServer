@@ -1,2 +1,4 @@
 .vim/
 .swp
+__pycache__
+compose.override.yml

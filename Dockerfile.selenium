@@ -1,4 +1,4 @@
-FROM python:3.9.4-buster
+FROM python:3.9-buster
 
 # Chrome
 RUN wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - \
