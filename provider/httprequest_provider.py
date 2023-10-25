@@ -88,27 +88,24 @@ class HttpRequestProvider(object):
 
         for item in iter(lines):
             field = item[0]
-            i = 0
-            has = False
-
-            while i < len(fields):
-                if fields[i] == field:
-                    has = True
-                    break
-                i+=1
-
-            if has:
-               result[fields_names[i]] = item[1].strip() 
+            if field in fields:
+                result[fields_names[fields.index(field)]] = item[1].strip()
 
         celebrities = soup.select("ul.celebrities-list li.celebrity")
 
         def func_element_wrap(element):
             cid = re.search(".*/(\\d+)/$", element.select_one("a")["href"]).group(1)
             img = re.search(".*url\\((.*)\\).*", element.select_one("div.avatar")["style"]).group(1)
-            name = element.select_one("span.name").string.split(" ")[0]
+            name = element.select_one("span.name").string.strip()
+            type = ""
             role = ""
             try:
-                role = element.select_one("span.role").string.split(" ")[0]
+                _ = element.select_one("span.role").string.strip().split(" ")
+                type = _[0]
+                if _[0] == "饰":
+                    role = " ".join(_[1:])
+                elif _[0] == "配":
+                    role = " ".join(_[1:])
             except:
                 pass
 
@@ -116,18 +113,19 @@ class HttpRequestProvider(object):
                 "id": cid,
                 "img": img,
                 "name": name,
-                "role": role
+                "role": type,
+                "rolename": role,
             }
 
         celebrities = filter(lambda x: 'fake' not in x['class'], celebrities)
         celebrities = map(func_element_wrap, celebrities)
-        celebrities = filter(lambda x: x["role"] in ["导演","配音","演员"], list(celebrities))
+        celebrities = filter(lambda x: x["role"] in ["导演", "配音", "演员", "编剧", "制片人", "作曲"], celebrities)
         result["celebrities"] = list(celebrities)
 
         return result
 
     def fetch_celebrities(self, sid:str) -> List:
-        limits=15
+        limits = 20
         r = requests.get(f"https://movie.douban.com/subject/{sid}/celebrities", headers=self.headers)
         r.raise_for_status()
         soup = BeautifulSoup(r.text, "html.parser")
@@ -136,10 +134,16 @@ class HttpRequestProvider(object):
         def func_element_wrap(element) -> dict:
             cid = re.search(".*/(\\d+)/$", element.select_one("a")["href"]).group(1)
             img = re.search(".*url\\((.*)\\).*", element.select_one("div.avatar")["style"]).group(1)
-            name = element.select_one("span.name").string.split(" ")[0]
+            name = element.select_one("span.name").string.strip().split(" ")[0]
+            type = ""
             role = ""
             try:
-                role = element.select_one("span.role").string.split(" ")[0]
+                _: list[str] = element.select_one("span.role").string.strip().split(" ")
+                type = _[0]
+                if "(饰" in _:
+                    role = " ".join(_[_.index("(饰") + 1:]).removesuffix(")")
+                elif "(配" in _:
+                    role = " ".join(_[_.index("(配") + 1:]).removesuffix(")")
             except:
                 pass
 
@@ -147,7 +151,8 @@ class HttpRequestProvider(object):
                 "id": cid,
                 "img": img,
                 "name": name,
-                "role": role
+                "role": type,
+                "rolename": role,
             }
 
         # def load_detail(x) -> dict:
@@ -155,7 +160,7 @@ class HttpRequestProvider(object):
             # return {**x, **detail}
 
         result = map(func_element_wrap, elements)
-        result = filter(lambda x: x["role"] in ["导演","配音","演员"], list(result))
+        result = filter(lambda x: x["role"] in ["导演", "配音", "演员", "编剧", "制片人", "作曲"], result)
         # result = map(load_detail, list(result)[:limits])
         return list(result)[:limits]
 
@@ -175,23 +180,20 @@ class HttpRequestProvider(object):
 
         name = name.split(" ", 1)[0]
 
-        fields = ("性别", "星座", "出生日期", "出生地", "职业", "更多外文名", "家庭成员", "imdb编号", "官方网站")
-        fields_names = ("gender", "constellation", "birthdate", "birthplace", "role", "nickname", "friends", "imdb", "site")
+        fields = ("性别", "星座", "出生日期", "生卒日期", "出生地", "职业", "更多外文名", "家庭成员", "imdb编号", "官方网站")
+        fields_names = ("gender", "constellation", "birthdate", "birthdeath", "birthplace", "role", "nickname", "friends", "imdb", "site")
         result:Dict[str, object] = {"intro": intro, "name": name, "id": cid, "img": img}
 
         for item in iter(lines):
             field = item[0]
-            i = 0
-            has = False
-
-            while i < len(fields):
-                if fields[i] == field:
-                    has = True
-                    break
-                i+=1
-
-            if has:
-               result[fields_names[i]] = item[1].strip() 
+            if field in fields:
+                result[fields_names[fields.index(field)]] = item[1].strip()
+        
+        if "birthdeath" in result:
+            birth, death = map(lambda x: x.strip(), result["birthdeath"].split("至"))
+            result["birthdate"] = birth
+            result["deathdate"] = death
+            del result["birthdeath"]
 
         return result
 
@@ -217,9 +219,8 @@ class HttpRequestProvider(object):
             medium = f"https://img1.doubanio.com/view/photo/m/public/p{data_id}.jpg"
             large = f"https://img1.doubanio.com/view/photo/l/public/p{data_id}.jpg"
             size = item.select_one(".prop").string.strip()
-            width = size[0:size.index("x")]
-            height = size[size.index("x") + 1:len(size)]
-            result.append({"id": data_id, "small": small, "medium": medium, "large": large, "size": size, "width": int(width), "height": int(height)})
+            width, height = map(int, size.split("x"))
+            result.append({"id": data_id, "small": small, "medium": medium, "large": large, "size": size, "width": width, "height": height})
 
         return result
 
